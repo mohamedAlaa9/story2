@@ -4,14 +4,15 @@ const express=require("express");
 const bodyParser=require("body-parser");
 const app=express();
 const mongoose=require("mongoose");
-const encrypt=require("mongoose-encryption");
+const md5=require("md5");
+//const encrypt=require("mongoose-encryption");
 mongoose.connect("mongodb://localhost:27017/userDB");
 const userSchema=new mongoose.Schema({
   Email:String,
   Password:String
 });
 
-userSchema.plugin(encrypt,{secret:process.env.SECRET,encryptedFields:["Password"]});
+//userSchema.plugin(encrypt,{secret:process.env.SECRET,encryptedFields:["Password"]});
 const User=mongoose.model("user",userSchema);
 app.use(express.static("public"));
 app.set('view engine','ejs');
@@ -27,7 +28,7 @@ app.get("/register",function(req,res){
 });
 app.post("/login",function(req,res){
   const userName=req.body.username;
-  const password=req.body.password;
+  const password=md5(req.body.password);
   User.findOne({Email:userName},function(err,foundUser){
     if(!err){
       if(foundUser){
@@ -41,7 +42,7 @@ app.post("/login",function(req,res){
 app.post("/register",function(req,res){
   const newUser=new User({
     Email:req.body.username,
-    Password:req.body.password
+    Password:md5(req.body.password)
   });
   newUser.save(function(err){
     if(err){
